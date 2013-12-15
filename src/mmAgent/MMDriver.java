@@ -13,7 +13,8 @@ public class MMDriver {
 	static int[] allowedGuesses = {0,1,2,3,4,5,6,7,8,9};
 	static int[] colors = {-1,-1,-1,-1,-1}; 
 	static int guessNumber = 1;
-	static int[] answer = {5,4,3,3,3};
+	static int[] answer = {1,3,1,8,7};
+	static int[] tester = {1,2,3,4,5};
 	static ArrayList<int[]> guessed = new ArrayList<int[]>();
 	
 	public static void main(String[] args){
@@ -91,6 +92,11 @@ public class MMDriver {
 				colors[j] = allowedGuesses[i];
 			}
 			printGuess(colors);
+			guessed.add(colors);
+			if(listEquals(answer, colors)){
+				System.out.println("SOLVED: " + guessNumber);
+				System.exit(0);
+			}
 			guessNumber ++;
 			int rightColor = numRight(colors, list);
 			for(int k=0; k<rightColor; k++){
@@ -99,6 +105,15 @@ public class MMDriver {
 			}
 		}
 		return correctColors;
+	}
+	
+	public static boolean guessed(int[] guess){
+		for(int i=0;i<guessed.size();i++)
+			if(guessed.get(i)==guess){
+				return true;
+			}
+		guessed.add(guess);
+		return false;
 	}
 	
 	public static void guessAll(int[] list1, int k){
@@ -110,12 +125,13 @@ public class MMDriver {
 	public static void guessAll(int[] l1, int[] l2, int n, int index, int k){
 		if(k==0){
 			if(numRight(answer,l2) == 5){
+				//guessed.add(l2);
 				printGuess(l2);
 				if(listEquals(answer, l2)){
 					System.out.println("SOLVED: " + guessNumber);
 					System.exit(0);
 				}
-			guessNumber++;
+				guessNumber++;
 			}
 			return;
 		}
