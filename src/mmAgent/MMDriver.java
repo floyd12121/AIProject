@@ -1,6 +1,9 @@
 package mmAgent;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Vector;
 
 /**
@@ -10,24 +13,74 @@ import java.util.Vector;
  * @version 12/7/2013
  */
 public class MMDriver {
-	static int[] allowedGuesses = {0,1,2,3,4,5,6,7,8,9};
-	static int[] colors = {-1,-1,-1,-1,-1}; 
+	static ArrayList<Integer> allowedGuesses = new ArrayList<Integer>();
+	static ArrayList<Integer> colors = new ArrayList<Integer>(); 
 	static int guessNumber = 1;
-	static int[] answer = {1,3,1,8,7};
-	static int[] tester = {1,2,3,4,5};
-	static ArrayList<int[]> guessed = new ArrayList<int[]>();
+	static ArrayList<Integer> answer = new ArrayList<Integer>();
+	static ArrayList<ArrayList<Integer>> guessed = new ArrayList<ArrayList<Integer>>();
+	static Scanner input = new Scanner(System.in);
+	
 	
 	public static void main(String[] args){
 		System.out.println("This is the Master Mind driver!!!");
-		int[] test = getColors(answer);
-		guessAll(test, 5);
+		System.out.println("how many possible colors??");
+		int numColors = input.nextInt();
+		allowedColors(numColors);
+		System.out.println("how many spots??");
+		int numSpots = input.nextInt();
+		initializeColorsArray(numSpots);
+		System.out.println("get answer file: ");
+		String fileName = input.next();
+		answerToArray(fileName, numSpots);
+		ArrayList<Integer> rightColors = getColors(answer);
+//		ArrayList<Integer> example = new ArrayList<Integer>();
+//		for(int i = 0; i<4; i++){
+//			example.add(i);
+//		}
+		guessAll(rightColors, numSpots);
+		
+		
 		
 	}
 	
-	public static boolean listEquals(int[] list1, int[] list2) {
+	public static void answerToArray(String FileName, int numSpots){
+//		for(int i=0; i<5;i++){
+//			answer.add(i);
+//		}
+		Scanner fileScanner = null;
+		try
+		{
+			FileInputStream file = new FileInputStream(FileName);
+			fileScanner = new Scanner(file);
+
+        }
+		catch (FileNotFoundException e)
+		{
+            System.out.println("File not found " + e.getMessage());
+            System.exit(-1);
+        }
+		
+		for(int i=0; i<numSpots;i++){
+			answer.add(fileScanner.nextInt());
+		}
+	}
+	
+	public static void allowedColors(int numColors){
+		for(int i = 0; i <= numColors-1; i++){
+			allowedGuesses.add(i);
+		}
+	}
+	
+	public static void initializeColorsArray(int numSpots){
+		for(int i = 0; i< numSpots; i++){
+			colors.add(-1);
+		}
+	}
+	
+	public static boolean listEquals(ArrayList<Integer> answer2, ArrayList<Integer> list2) {
 		boolean test = true;
-		for(int i = 0; i < list1.length; i++) {
-			test = test && list1[i] == list2[i];
+		for(int i = 0; i < answer2.size(); i++) {
+			test = test && answer2.get(i) == list2.get(i);
 		}
 		return test;
 	}
@@ -42,10 +95,10 @@ public class MMDriver {
 		return counter;
 	}
 	
-	public static int numRight(int[] list1, int[] list2) {
+	public static int numRight(ArrayList<Integer> list1, ArrayList<Integer> answer2) {
 		//get the count of each number in the list
 		int[] hist1 = histogram(list1);
-		int[] hist2 = histogram(list2);
+		int[] hist2 = histogram(answer2);
 
 		Vector<Integer> newHist = new Vector<Integer>();
 
@@ -84,12 +137,30 @@ public class MMDriver {
 		return hist;
 	}
 	
-	public static int[] getColors(int[] list){
-		int[] correctColors = {-1,-1,-1,-1,-1};
-		int counter = 0;
-		for(int i=0; i<allowedGuesses.length; i++){
-			for(int j=0; j<list.length; j++){
-				colors[j] = allowedGuesses[i];
+	public static int max(ArrayList<Integer> m) {
+		int max = -1;
+		for(int i = 0; i < m.size(); i++) {
+			if(m.get(i) > max) {
+				max = m.get(i);
+			}
+		}
+		return max;
+	}
+
+	public static int[] histogram(ArrayList<Integer> list1) {
+		int[] hist = new int[max(list1) + 1];
+		
+		for(int i = 0; i < list1.size(); i++) {
+			hist[list1.get(i)]++;
+		}
+		return hist;
+	}
+	
+	public static ArrayList<Integer> getColors(ArrayList<Integer> answer2){
+		ArrayList<Integer> correctColors = new ArrayList<Integer>();
+		for(int i=0; i<allowedGuesses.size(); i++){
+			for(int j=0; j<answer2.size(); j++){
+				colors.set(j, allowedGuesses.get(i));
 			}
 			printGuess(colors);
 			guessed.add(colors);
@@ -98,16 +169,15 @@ public class MMDriver {
 				System.exit(0);
 			}
 			guessNumber ++;
-			int rightColor = numRight(colors, list);
+			int rightColor = numRight(colors, answer2);
 			for(int k=0; k<rightColor; k++){
-				correctColors[counter] = allowedGuesses[i];
-				counter++;
+				correctColors.add(allowedGuesses.get(i));	
 			}
 		}
 		return correctColors;
 	}
 	
-	public static boolean guessed(int[] guess){
+	public static boolean guessed(ArrayList<Integer> guess){
 		for(int i=0;i<guessed.size();i++)
 			if(guessed.get(i)==guess){
 				return true;
@@ -116,15 +186,18 @@ public class MMDriver {
 		return false;
 	}
 	
-	public static void guessAll(int[] list1, int k){
-		int n = list1.length;
-		int[] list2 = {-1,-1,-1,-1,-1};
+	public static void guessAll(ArrayList<Integer> list1, int k){
+		int n = list1.size();
+		ArrayList<Integer> list2 = new ArrayList<Integer>();
+		for(int i=0; i<n; i++){
+			list2.add(-1);
+		}
 		guessAll(list1, list2, n, 0, k);
 	}
 	
-	public static void guessAll(int[] l1, int[] l2, int n, int index, int k){
+	public static void guessAll(ArrayList<Integer> l1, ArrayList<Integer> l2, int n, int index, int k){
 		if(k==0){
-			if(numRight(answer,l2) == 5){
+			if(numRight(l2,answer) == answer.size()){
 				//guessed.add(l2);
 				printGuess(l2);
 				if(listEquals(answer, l2)){
@@ -135,17 +208,16 @@ public class MMDriver {
 			}
 			return;
 		}
-		
 		for(int i=0; i< n; i++){
-			l2[index] = l1[i];
+			l2.set(index, l1.get(i));
 			guessAll(l1, l2, n, index+1, k-1);
 		}
 	}
 
-	public static void printGuess(int[] list){
+	public static void printGuess(ArrayList<Integer> list){
 		System.out.print("Guess " + guessNumber + ": ");
-		for(int i=0; i<list.length; i++){
-			System.out.print(list[i]);
+		for(int i=0; i<list.size(); i++){
+			System.out.print(list.get(i));
 		}
 		System.out.println();
 	}
