@@ -3,6 +3,8 @@ package mmAgent;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -18,6 +20,7 @@ public class MMDriver {
 	static int guessNumber = 1;
 	static ArrayList<Integer> answer = new ArrayList<Integer>();
 	static ArrayList<ArrayList<Integer>> guessed = new ArrayList<ArrayList<Integer>>();
+	static ArrayList<ArrayList<Integer>> noMatches = new ArrayList<ArrayList<Integer>>();
 	static Scanner input = new Scanner(System.in);
 	
 	
@@ -32,21 +35,14 @@ public class MMDriver {
 		System.out.println("get answer file: ");
 		String fileName = input.next();
 		answerToArray(fileName, numSpots);
+		
 		ArrayList<Integer> rightColors = getColors(answer);
-//		ArrayList<Integer> example = new ArrayList<Integer>();
-//		for(int i = 0; i<4; i++){
-//			example.add(i);
-//		}
-		guessAll(rightColors, numSpots);
-		
-		
-		
+		long seed = System.nanoTime();
+		Collections.shuffle(rightColors, new Random(seed));
+		guessAll(rightColors, numSpots);		
 	}
 	
 	public static void answerToArray(String FileName, int numSpots){
-//		for(int i=0; i<5;i++){
-//			answer.add(i);
-//		}
 		Scanner fileScanner = null;
 		try
 		{
@@ -69,6 +65,7 @@ public class MMDriver {
 		for(int i = 0; i <= numColors-1; i++){
 			allowedGuesses.add(i);
 		}
+
 	}
 	
 	public static void initializeColorsArray(int numSpots){
@@ -85,10 +82,10 @@ public class MMDriver {
 		return test;
 	}
 	
-	public static int numRightPlace(int[] list1, int[] list2) {
+	public static int numRightPlace(ArrayList<Integer> list, ArrayList<Integer> answer2) {
 		int counter = 0;
-		for(int i = 0; i < list1.length; i++) {
-			if(list1[i] == list2[i]) {
+		for(int i = 0; i < list.size(); i++) {
+			if(list.get(i) == answer2.get(i)) {
 				counter++;
 			}
 		}
@@ -159,16 +156,21 @@ public class MMDriver {
 	public static ArrayList<Integer> getColors(ArrayList<Integer> answer2){
 		ArrayList<Integer> correctColors = new ArrayList<Integer>();
 		for(int i=0; i<allowedGuesses.size(); i++){
+			colors = new ArrayList<Integer>();
 			for(int j=0; j<answer2.size(); j++){
-				colors.set(j, allowedGuesses.get(i));
+				colors.add(i);
 			}
-			printGuess(colors);
-			guessed.add(colors);
-			if(listEquals(answer, colors)){
-				System.out.println("SOLVED: " + guessNumber);
-				System.exit(0);
+			
+			if(!isGuessed(colors)){
+				printGuess(colors);
+				
+				if(listEquals(answer, colors)){
+					System.out.println("SOLVED: " + guessNumber);
+					System.exit(0);
+				}
+				guessNumber ++;
 			}
-			guessNumber ++;
+		
 			int rightColor = numRight(colors, answer2);
 			for(int k=0; k<rightColor; k++){
 				correctColors.add(allowedGuesses.get(i));	
@@ -177,12 +179,22 @@ public class MMDriver {
 		return correctColors;
 	}
 	
-	public static boolean guessed(ArrayList<Integer> guess){
-		for(int i=0;i<guessed.size();i++)
-			if(guessed.get(i)==guess){
+	public static boolean isGuessed(ArrayList<Integer> guess){
+		for(int i=0;i<guessed.size();i++){
+			if(listEquals(guessed.get(i),guess)){
 				return true;
 			}
+		}
 		guessed.add(guess);
+		return false;
+	}
+	
+	public static boolean isDefNotRight(ArrayList<Integer> guess){
+		for(int i=0; i<noMatches.size();i++){
+			if(numRightPlace(noMatches.get(i),guess)>0){
+				return true;
+			}
+		}
 		return false;
 	}
 	
@@ -196,18 +208,27 @@ public class MMDriver {
 	}
 	
 	public static void guessAll(ArrayList<Integer> l1, ArrayList<Integer> l2, int n, int index, int k){
+		
 		if(k==0){
 			if(numRight(l2,answer) == answer.size()){
-				//guessed.add(l2);
-				printGuess(l2);
-				if(listEquals(answer, l2)){
-					System.out.println("SOLVED: " + guessNumber);
-					System.exit(0);
+				ArrayList<Integer> l3 = new ArrayList<Integer>(l2);
+				
+				if(!isGuessed(l3) && !isDefNotRight(l3)){
+					if(numRightPlace(answer,l3)==0){
+						noMatches.add(l3);
+					}
+					printGuess(l3);
+					
+					if(listEquals(answer, l2)){
+						System.out.println("SOLVED IN " + guessNumber + " TURNS");
+						System.exit(0);
+					}
+					guessNumber++;
 				}
-				guessNumber++;
 			}
 			return;
 		}
+		
 		for(int i=0; i< n; i++){
 			l2.set(index, l1.get(i));
 			guessAll(l1, l2, n, index+1, k-1);
@@ -218,6 +239,16 @@ public class MMDriver {
 		System.out.print("Guess " + guessNumber + ": ");
 		for(int i=0; i<list.size(); i++){
 			System.out.print(list.get(i));
+		}
+		System.out.println("\nYou have " + (numRight(list, answer) - numRightPlace(list, answer)) +
+				" right but in the wrong place and " 
+				+ numRightPlace(list, answer) + " right and in the right place \n");
+		
+	}
+	
+	public static void printGuessList(ArrayList<ArrayList<Integer>> guessed2){
+		for(int i=0;i<guessed2.size();i++){
+			System.out.println(guessed2.get(i));
 		}
 		System.out.println();
 	}
