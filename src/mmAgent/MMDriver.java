@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.Vector;
 
 /**
  * This class represents the MasterMind driver
- *  *** Don't know where to go with it yet.
  * @author Matt Reeping & John Wright
  * @version 12/7/2013
  */
@@ -25,6 +25,9 @@ public class MMDriver {
 	
 	
 	public static void main(String[] args){
+
+		
+        
 		System.out.println("This is the Master Mind driver!!!");
 		System.out.println("how many possible colors??");
 		int numColors = input.nextInt();
@@ -36,9 +39,11 @@ public class MMDriver {
 		String fileName = input.next();
 		answerToArray(fileName, numSpots);
 		
+		
 		ArrayList<Integer> rightColors = getColors(answer);
-		long seed = System.nanoTime();
-		Collections.shuffle(rightColors, new Random(seed));
+		//Randomize the correct colors
+//		long seed = System.nanoTime();
+//		Collections.shuffle(rightColors, new Random(seed));
 		guessAll(rightColors, numSpots);		
 	}
 	
